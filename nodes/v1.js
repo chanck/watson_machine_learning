@@ -60,14 +60,21 @@ module.exports = function(RED) {
 
     switch (m) {
       case 'runPrediction':
+	/**
         if (! (msg.payload && Array.isArray(msg.payload))) {
           message = 'An array of values is required on msg.payload to run a prediction';
 	} else if (!(msg.fields && Array.isArray(msg.fields))) {
           message = 'An array of values is required on msg.fields to run a prediction';
         } else {
           params.values = msg.payload;
-	  params.fields = msg.fields;
+	  // params.fields = msg.fields;
         }
+	**/
+	if (! (msg.payload )) {
+	   message = 'An array of values or an object is required on msg.payload to run a prediction';
+	}  else {
+           params.values = msg.payload;
+        }	
         break;
     }
 
@@ -163,12 +170,16 @@ module.exports = function(RED) {
         auth: {
           'bearer': t
         },
-      body: JSON.stringify(p.fields?{"fields":p.fields,"values": p.values}:{"values": p.values})
+      body: JSON.stringify(p.values)
       }, (error, response, body) => {
         if (!error && response.statusCode == 200) {
           data = JSON.parse(body);
+	  data.url = uriAddress;
+	  data.request=body;
           resolve(data);
         } else if (error) {
+	  error.url = uriAddress;
+	  error.request=body;
           reject(error);
         } else {
           reject('Error performing request ' + response.statusCode);
@@ -388,6 +399,7 @@ module.exports = function(RED) {
         })
         .then( (t) => {
           token = t;
+	  msg.token = t;
           node.status({ fill: 'blue', shape: 'dot', text: 'executing' });
           return executeMethod(method, node.connectionNode, token, params);
         })
