@@ -62,8 +62,11 @@ module.exports = function(RED) {
       case 'runPrediction':
         if (! (msg.payload && Array.isArray(msg.payload))) {
           message = 'An array of values is required on msg.payload to run a prediction';
+	} else if (!(msg.fields && Array.isArray(msg.fields))) {
+          message = 'An array of values is required on msg.fields to run a prediction';
         } else {
           params.values = msg.payload;
+	  params.fields = msg.fields;
         }
         break;
     }
@@ -160,7 +163,7 @@ module.exports = function(RED) {
         auth: {
           'bearer': t
         },
-        body: JSON.stringify({"values": p.values})
+      body: JSON.stringify(p.fields?{"fields":p.fields,"values": p.values}:{"values": p.values})
       }, (error, response, body) => {
         if (!error && response.statusCode == 200) {
           data = JSON.parse(body);
